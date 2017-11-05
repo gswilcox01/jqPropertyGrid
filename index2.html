@@ -27,34 +27,61 @@
 		$(function() {
 			// This is our data structure
 			var dataStructure = {
-				accumulateTicks: true,
-				filter: false,
-				filterSize: 200,
-				buyColor: '#00ff00',
-				sellColor: '#ff0000',
-				someOption: 'Maybe',
-				noGroup: 'I have no group',
-				dontShowMe: 'please',
-				readOnly: 'I am read only'
+				font: 'Consolas',
+				fontSize: 14,
+				fontColor: '#a3ac03',
+				jQuery: true,
+				modernizr: false,
+				framework: 'angular',
+				iHaveNoMeta: 'Never mind...',
+				icon: 'HOME',
+				choices: ["Choice 1", "Choice 2", "A really long choice which should trigger the horizontal scrollbar!"]
 			};
 
 			// This is our meta object / form design
-			var colorOptions = { preferredFormat: 'hex', showInput: true, showInitial: true };
 			var formDesignSettings = {
-				dontShowMe: {browsable: false},
-				filter: {group: 'Behavior', name: 'Filter', type: 'boolean'},
-				filterSize: {group: 'Behavior', name: 'Filter size', type: 'number', options: { min: 0, max: 500, step: 10 }},
-				accumulateTicks: {group: 'Behavior', name: 'Accumulate ticks', type: 'boolean'},
-				buyColor: {group: 'Appearance', name: 'Buy color', type: 'color', options: colorOptions},
-				sellColor: {group: 'Appearance', name: 'Sell color', type: 'color', options: colorOptions},
-				someOption: {name: 'Some option', type: 'options', options: ['Yes', 'No', {text:'Not sure', value: 'Maybe'}]},
-				readOnly: {name: 'Read Only', type: 'label', description: 'This is a label', showHelp: false}
+				font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
+				fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},
+				fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
+				jQuery: { group: 'Plugins', description: 'Whether or not to include jQuery on the page', showHelp: false },
+				modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
+				framework: {name: 'Framework', group: 'Plugins', type: 'options', options: ['None', {text:'AngularJS', value: 'angular'}, {text:'Backbone.js', value: 'backbone'}], description: 'Whether to include any additional framework'},
+				icon: {name: 'Icon', type: 'icon'},
+				choices: {name: 'n/a', group: 'Choices (1 per line):', type: 'textarea', colspan2: true}
+			};
+
+      // define some extra custom types to use with jqPropertyGrid
+      // TODO: Move these directly into the grid component! so each user doesn't have to define these...
+			var theCustomTypes = {
+				icon: {
+					html: function(elemId, name, value, meta) { // custom renderer for type (required)
+						return '<i class="fa fa-' + value + '"></i>';
+					},
+					valueFn: function() {return 'Icon field value';}
+				},
+				textarea: {
+					html: function(elemId, name, value, meta) {
+						var html = '<textarea id="' + elemId + '" rows=6 style="white-space: nowrap; overflow-x: auto; width:100%">';
+						if (value instanceof Array) {
+							html += value.join("\n");
+						}
+						html += '</textarea>';
+						return html;
+					},
+					makeValueFn: function(elemId, name, value, meta) {
+						return function() {
+							return $('#' + elemId).val().split('\n');
+						}
+					}
+				}
 			};
 
 			// Lets create the grid for it
       function initPropertyGrid(data) {
         $('#propGrid').jqPropertyGrid(data, {
-          meta: formDesignSettings
+          useFontAwesome: true, 
+          meta: formDesignSettings, 
+          customTypes: theCustomTypes
         });
       }
       function getFormValues() {
@@ -82,13 +109,14 @@
 			</div>
 			<div>
 				<ul class="nav navbar-nav">
-					<li class="active"><a href="index.html">Example 1</a></li>
-					<li><a href="index2.html">Example 2</a></li>
+					<li ><a href="index.html">Example 1</a></li>
+					<li class="active"><a href="index2.html">Example 2</a></li>
 				</ul>
 			</div>
 		</div><!-- /.container-fluid -->
 	</nav>
 
+  <!-- example -->
 	<div id="propGrid" style="float:left; margin-left: 20px;"></div>
 	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
 		<textarea id="txtValues" rows="20" cols="50"></textarea><br>
