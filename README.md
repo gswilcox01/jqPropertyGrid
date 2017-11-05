@@ -98,7 +98,7 @@ Each property in the metadata object could have the following:
 * description - A description of the property, will be used as tooltip on an hint element (a span with text "[?]")
 * showHelp - If set to false, will disable showing description's span with text "[?]" on property name. Will instead show tooltip on hover of property value (adds title attribute to property value). Can be omitted if default description effect is desired
 ### Live example
-See this CodePen page: http://codepen.io/ValYouW/pen/zInBg
+See : https://gswilcox01.github.io/jqPropertyGrid/
 
 ## Local Setup
 To install dev dependencies & run locally
