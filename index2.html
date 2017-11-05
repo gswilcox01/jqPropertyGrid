@@ -57,7 +57,11 @@
 					html: function(elemId, name, value, meta) { // custom renderer for type (required)
 						return '<i class="fa fa-' + value + '"></i>';
 					},
-					valueFn: function() {return 'Icon field value';}
+					makeValueFn: function(elemId, name, value, meta) {
+						return function() {
+							return value;
+						}
+					}
 				},
 				textarea: {
 					html: function(elemId, name, value, meta) {

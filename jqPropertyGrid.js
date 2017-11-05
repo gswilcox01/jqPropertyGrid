@@ -103,6 +103,8 @@
 		var getValues = function() {
 			var result = {};
 			for (var prop in getValueFuncs) {
+				console.log(prop)
+				console.log(typeof getValueFuncs[prop])
 				if (typeof getValueFuncs[prop] !== 'function') {
 					continue;
 				}
@@ -221,6 +223,11 @@
 				valueHTML = '<label for="' + elemId + '" title="' + meta.description + '">' + value + '</label>';
 			} else {
 				valueHTML = '<label for="' + elemId + '">' + value + '</label>';
+			}
+			if (getValueFuncs) {
+				getValueFuncs[name] = function() {
+					return value;
+				};
 			}
 
 			// Default is textbox
