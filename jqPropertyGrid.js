@@ -29,18 +29,17 @@
 			}
 
 			return null;
-		} else if (typeof obj === 'string') {
-			console.error('jqPropertyGrid got invalid option:', obj);
-			return;
 		} else if (typeof obj !== 'object' || obj === null) {
-			console.error('jqPropertyGrid must get an object in order to initialize the grid.');
+			console.error('jqPropertyGrid 1st parameter must get a JS data object to initialize the grid.');
+			return;
+		} else if (typeof options !== 'object' || options === null) {
+			console.error('jqPropertyGrid 2nd parameter must be a JS object defining the form design and grid options.');
 			return;
 		}
 
 		// Normalize options
-		options = options && typeof options === 'object' ? options : {};
 		options.customTypes = options.customTypes || {};
-		var meta = options.meta && typeof options.meta === 'object' ? options.meta : options;
+		var meta = options.meta;
 
 		// Seems like we are ok to create the grid
 		var propertyRowsHTML = {OTHER_GROUP_NAME: ''};
@@ -49,23 +48,19 @@
 		var getValueFuncs = {};
 		var pgId = 'pg' + (pgIdSequence++);
 
-		var currGroup;
+		// LOOP through all properties in the DATA OBJECT
 		for (var prop in obj) {
 			// Skip if this is not a direct property, a function, or its meta says it's non browsable
 			if (!obj.hasOwnProperty(prop) || typeof obj[prop] === 'function' || (meta[prop] && meta[prop].browsable === false)) {
 				continue;
 			}
 
-			// Check what is the group of the current property or use the default 'Other' group
-			currGroup = (meta[prop] && meta[prop].group) || OTHER_GROUP_NAME;
-
 			// If this is the first time we run into this group create the group row
-			if (currGroup !== OTHER_GROUP_NAME && !groupsHeaderRowHTML[currGroup]) {
+			var currGroup = (meta[prop] && meta[prop].group) || OTHER_GROUP_NAME;
+			if (groupsHeaderRowHTML[currGroup] === undefined) {
 				groupsHeaderRowHTML[currGroup] = getGroupHeaderRowHtml(currGroup);
+				propertyRowsHTML[currGroup] = '';
 			}
-
-			// Initialize the group cells html
-			propertyRowsHTML[currGroup] = propertyRowsHTML[currGroup] || '';
 
 			// Append the current cell html into the group html
 			propertyRowsHTML[currGroup] += getPropertyRowHtml(pgId, prop, obj[prop], meta[prop], postCreateInitFuncs, getValueFuncs, options);
@@ -74,15 +69,16 @@
 		// Now we have all the html we need, just assemble it
 		var innerHTML = '<table class="pgTable">';
 		for (var group in groupsHeaderRowHTML) {
-			// Add the group row
+			// Skip the "Other" group, it always comes last
+			if (group == OTHER_GROUP_NAME) continue;
+
 			innerHTML += groupsHeaderRowHTML[group];
-			// Add the group cells
 			innerHTML += propertyRowsHTML[group];
 		}
 
-		// Finally we add the 'Other' group (if we have something there)
+		// Finally add the "Other" group to the end
 		if (propertyRowsHTML[OTHER_GROUP_NAME]) {
-			innerHTML += getGroupHeaderRowHtml(OTHER_GROUP_NAME);
+			innerHTML += groupsHeaderRowHTML[OTHER_GROUP_NAME];
 			innerHTML += propertyRowsHTML[OTHER_GROUP_NAME];
 		}
 
@@ -90,25 +86,20 @@
 		innerHTML += '</table>';
 		this.html(innerHTML);
 
-		// Call the post init functions
+		// Now that HTML is in the DOM, run any post-init functions
 		for (var i = 0; i < postCreateInitFuncs.length; ++i) {
 			if (typeof postCreateInitFuncs[i] === 'function') {
 				postCreateInitFuncs[i]();
-				// just in case make sure we are not holding any reference to the functions
-				postCreateInitFuncs[i] = null;
 			}
 		}
 
-		// Create a function that will return tha values back from the property grid
+		// Create a function that will return the values back from the property grid
 		var getValues = function() {
 			var result = {};
 			for (var prop in getValueFuncs) {
-				console.log(prop)
-				console.log(typeof getValueFuncs[prop])
 				if (typeof getValueFuncs[prop] !== 'function') {
 					continue;
 				}
-
 				result[prop] = getValueFuncs[prop]();
 			}
 
@@ -133,123 +124,91 @@
 	 * @param {*} value - The current property value
 	 * @param {object} meta - A metadata object describing this property
 	 * @param {function[]} [postCreateInitFuncs] - An array to fill with functions to run after the grid was created
-	 * @param {object.<string, function>} [getValueFuncs] - A dictionary where the key is the property name and the value is a function to retrieve the propery selected value
+	 * @param {object.<string, function>} [getValueFuncs] - A dictionary where the key is the property name and the value is a function to retrieve the property selected value
 	 * @param {object} options - The global options object
 	 */
 	function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getValueFuncs, options) {
-		if (!name) {
-			return '';
-		}
-
 		meta = meta || {};
-		// We use the name in the meta if available
 		var displayName = meta.name || name;
 		var type = meta.type || '';
 		var elemId = pgId + name;
-
 		var valueHTML;
 
 		// check if type is registered in customTypes
-		var isCustomType = false;
-		for (var customType in options.customTypes) {
-			if (type === customType) {
-				isCustomType = options.customTypes[customType];
-			}
-		}
-
-		// If value was handled by custom type
-		if (isCustomType !== false) {
-			valueHTML = isCustomType.html(elemId, name, value, meta);
-			if (getValueFuncs) {
-				if (isCustomType.hasOwnProperty('makeValueFn')) {
-					getValueFuncs[name] = isCustomType.makeValueFn(elemId, name, value, meta);
-				} else if (isCustomType.hasOwnProperty('valueFn')) {
-					getValueFuncs[name] = isCustomType.valueFn;
-				} else {
-					getValueFuncs[name] = function() {
-						return $('#' + elemId).val();
-					};
-				}
+		var customType = options.customTypes[type]
+		if (customType) {
+			valueHTML = customType.html(elemId, name, value, meta);
+			getValueFuncs[name] = customType.valueFunction(elemId, name, value, meta);
+			if (customType.hasOwnProperty('postCreateInitFunction')) {
+				postCreateInitFuncs.push(customType.postCreateInitFunction(elemId, name, value, meta));
 			}
 		}
 
 		// If boolean create checkbox
 		else if (type === 'boolean' || (type === '' && typeof value === 'boolean')) {
 			valueHTML = '<input type="checkbox" id="' + elemId + '" value="' + name + '"' + (value ? ' checked' : '') + ' />';
-			if (getValueFuncs) {
-				getValueFuncs[name] = function() {
-					return $('#' + elemId).prop('checked');
-				};
-			}
+			getValueFuncs[name] = function() {
+				return $('#' + elemId).prop('checked');
+			};
+		}
 
-			// If options create drop-down list
-		} else if (type === 'options' && Array.isArray(meta.options)) {
+		// If options create drop-down list
+		else if (type === 'options' && Array.isArray(meta.options)) {
 			valueHTML = getSelectOptionHtml(elemId, value, meta.options);
-			if (getValueFuncs) {
-				getValueFuncs[name] = function() {
-					return $('#' + elemId).val();
-				};
-			}
+			getValueFuncs[name] = function() {
+				return $('#' + elemId).val();
+			};
+		}
 
-			// If number and a jqueryUI spinner is loaded use it
-		} else if (typeof $.fn.spinner === 'function' && (type === 'number' || (type === '' && typeof value === 'number'))) {
+		// If number and a jqueryUI spinner is loaded use it
+		else if (typeof $.fn.spinner === 'function' && (type === 'number' || (type === '' && typeof value === 'number'))) {
 			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" style="width:50px" />';
-			if (postCreateInitFuncs) {
-				postCreateInitFuncs.push(initSpinner(elemId, meta.options));
-			}
+			postCreateInitFuncs.push(initSpinner(elemId, meta.options));
+			getValueFuncs[name] = function() {
+				return $('#' + elemId).spinner('value');
+			};
+		}
 
-			if (getValueFuncs) {
-				getValueFuncs[name] = function() {
-					return $('#' + elemId).spinner('value');
-				};
-			}
-
-			// If color and we have the spectrum color picker use it
-		} else if (type === 'color' && typeof $.fn.spectrum === 'function') {
+		// If color and we have the spectrum color picker use it
+		else if (type === 'color' && typeof $.fn.spectrum === 'function') {
 			valueHTML = '<input type="text" id="' + elemId + '" />';
-			if (postCreateInitFuncs) {
-				postCreateInitFuncs.push(initColorPicker(elemId, value, meta.options));
-			}
+			postCreateInitFuncs.push(initColorPicker(elemId, value, meta.options));
+			getValueFuncs[name] = function() {
+				return $('#' + elemId).spectrum('get').toHexString();
+			};
+		}
 
-			if (getValueFuncs) {
-				getValueFuncs[name] = function() {
-					return $('#' + elemId).spectrum('get').toHexString();
-				};
-			}
-
-			// If label (for read-only)
-		} else if (type === 'label') {
+		// If label (for read-only)
+		else if (type === 'label') {
 			if (typeof meta.description === 'string' && meta.description) {
 				valueHTML = '<label for="' + elemId + '" title="' + meta.description + '">' + value + '</label>';
 			} else {
 				valueHTML = '<label for="' + elemId + '">' + value + '</label>';
 			}
-			if (getValueFuncs) {
-				getValueFuncs[name] = function() {
-					return value;
-				};
-			}
-
-			// Default is textbox
-		} else {
-			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '"</input>';
-			if (getValueFuncs) {
-				getValueFuncs[name] = function() {
-					return $('#' + elemId).val();
-				};
-			}
+			getValueFuncs[name] = function() {
+				return value;
+			};
 		}
 
+		// Default is textbox
+		else {
+			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '"</input>';
+			getValueFuncs[name] = function() {
+				return $('#' + elemId).val();
+			};
+		}
+
+		// Now create the label HTML for column 1
 		var helpIcon = '[?]';
 		if (options.useFontAwesome) {
 			helpIcon = '<i class="fa fa-question-circle-o"></i>';
 		}
-
 		if (typeof meta.description === 'string' && meta.description &&
 			(typeof meta.showHelp === 'undefined' || meta.showHelp)) {
 			displayName += '<span class="pgTooltip" title="' + meta.description + '">' + helpIcon + '</span>';
 		}
 
+		// Now create the TR which has 1 column for the label and 1 column for the INPUT
 		if (meta.colspan2) {
 			return '<tr class="pgRow"><td colspan="2" class="pgCell">' + valueHTML + '</td></tr>';
 		} else {
@@ -265,27 +224,18 @@
 	 * @returns {string} The select element html
 	 */
 	function getSelectOptionHtml(id, selectedValue, options) {
-		id = id || '';
 		selectedValue = selectedValue || '';
 		options = options || [];
 
-		var html = '<select';
-		if (id) {
-			html += ' id="' + id + '"';
-		}
-
-		html += '>';
-
-		var text;
-		var value;
+		var html = '<select id="' + id + '">';
 		for (var i = 0; i < options.length; i++) {
-			value = typeof options[i] === 'object' ? options[i].value : options[i];
-			text = typeof options[i] === 'object' ? options[i].text : options[i];
+			var value = typeof options[i] === 'object' ? options[i].value : options[i];
+			var text = typeof options[i] === 'object' ? options[i].text : options[i];
 
-			html += '<option value="' + value + '"' + (selectedValue === value ? ' selected>' : '>');
+			html += '<option value="' + value + '"';
+			html += (selectedValue === value) ? ' selected>' : '>';
 			html += text + '</option>';
 		}
-
 		html += '</select>';
 		return html;
 	}
@@ -297,12 +247,8 @@
 	 * @returns {function}
 	 */
 	function initSpinner(id, options) {
-		if (!id) {
-			return null;
-		}
 		// Copy the options so we won't change the user "copy"
-		var opts = {};
-		$.extend(opts, options);
+		var opts = $.extend({}, options);
 
 		// Add a handler to the change event to verify the min/max (only if not provided by the user)
 		opts.change = typeof opts.change === 'undefined' ? onSpinnerChange : opts.change;
@@ -320,12 +266,7 @@
 	 * @returns {function}
 	 */
 	function initColorPicker(id, color, options) {
-		if (!id) {
-			return null;
-		}
-
-		var opts = {};
-		$.extend(opts, options);
+		var opts = $.extend({}, options);
 		if (typeof color === 'string') {
 			opts.color = color;
 		}
