@@ -1,5 +1,5 @@
 module.exports = {
-  html: function (elemId, name, value, meta) {
+  html (elemId, name, value, meta) {
     var html = '<textarea id="' + elemId;
     if (value instanceof Array) {
       html += '" rows=6 style="white-space: nowrap; overflow-x: auto; width:100%">';
@@ -11,7 +11,8 @@ module.exports = {
     html += '</textarea>';
     return html;
   },
-  valueFunction: function (elemId, name, value, meta) {
+
+  valueFunction (elemId, name, value, meta) {
     return function () {
       if (value instanceof Array) {
         return $('#' + elemId).val().split('\n');
