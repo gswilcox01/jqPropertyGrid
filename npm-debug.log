@@ -11,14 +11,9 @@
 5 verbose stack D .jscsrc
 5 verbose stack D .jshintrc
 5 verbose stack D Gruntfile.js
-5 verbose stack M README.md
 5 verbose stack D example/example.png
-5 verbose stack M index.html
-5 verbose stack M index2.html
 5 verbose stack D jqPropertyGrid.css
 5 verbose stack D jqPropertyGrid.js
-5 verbose stack M package.json
-5 verbose stack M yarn.lock
 5 verbose stack     at C:\Program Files\nodejs\node_modules\npm\lib\version.js:247:19
 5 verbose stack     at C:\Program Files\nodejs\node_modules\npm\lib\utils\no-progress-while-running.js:21:8
 5 verbose stack     at ChildProcess.exithandler (child_process.js:189:7)
@@ -36,14 +31,9 @@
 11 error D .jscsrc
 11 error D .jshintrc
 11 error D Gruntfile.js
-11 error M README.md
 11 error D example/example.png
-11 error M index.html
-11 error M index2.html
 11 error D jqPropertyGrid.css
 11 error D jqPropertyGrid.js
-11 error M package.json
-11 error M yarn.lock
 12 error If you need help, you may report this error at:
 12 error     <https://github.com/npm/npm/issues>
 13 verbose exit [ 1, true ]
