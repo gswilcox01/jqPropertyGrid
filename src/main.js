@@ -20,16 +20,21 @@ $.fn.jqPropertyGrid = function(obj, options) {
 
 		return null;
 	} else if (typeof obj !== 'object' || obj === null) {
-		console.error('jqPropertyGrid 1st parameter must get a JS data object to initialize the grid.');
+		console.error('jqPropertyGrid 1st parameter must be a JS data object to initialize the grid.');
 		return;
 	} else if (typeof options !== 'object' || options === null) {
-		console.error('jqPropertyGrid 2nd parameter must be a JS object defining the form design and grid options.');
+		console.error('jqPropertyGrid 2nd parameter must be a JS object defining the grid display options.');
 		return;
 	}
 
 	// Normalize options
 	options.customTypes = options.customTypes || {};
 	var meta = options.meta;
+
+	// Add our first external "type"
+	// TODO: move all types to external types
+	// TODO: use webpack function read all files in "types" directory, and auto-add by filename
+	options.customTypes['textarea'] = require('./types/textarea.js')
 
 	// Seems like we are ok to create the grid
 	var propertyRowsHTML = {OTHER_GROUP_NAME: ''};
