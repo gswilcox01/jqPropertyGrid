@@ -37,7 +37,8 @@
 				framework: 'angular',
 				iHaveNoMeta: 'Never mind...',
 				icon: 'home',
-				choices: ["Choice 1", "Choice 2", "A really long choice which should trigger the horizontal scrollbar!"]
+				choices: ["Choice 1", "Choice 2", "A really long choice which should trigger the horizontal scrollbar!"],
+				plaintext: "plain text for a text area (i.e. not an array)"
 			};
 
 			// This is our meta object / form design
@@ -49,7 +50,8 @@
 				modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
 				framework: {name: 'Framework', group: 'Plugins', type: 'options', options: ['None', {text:'AngularJS', value: 'angular'}, {text:'Backbone.js', value: 'backbone'}], description: 'Whether to include any additional framework'},
 				icon: {name: 'Icon', type: 'icon'},
-				choices: {name: 'n/a', group: 'Choices (1 per line):', type: 'textarea', colspan2: true}
+				choices: {name: 'n/a', group: 'Choices (1 per line):', type: 'textarea', colspan2: true},
+				plaintext: {group: 'Plaintext Textarea:', type: 'textarea', colspan2: true}
 			};
 
       // define some extra custom types to use with jqPropertyGrid
