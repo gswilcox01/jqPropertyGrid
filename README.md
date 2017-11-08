@@ -20,7 +20,7 @@ The html part:
 The Javascript part:
 ``` javascript
 // This is our target object
-var theObj = {
+var dataObject = {
   font: 'Consolas',
   fontSize: 14,
   fontColor: '#a3ac03',
@@ -32,7 +32,7 @@ var theObj = {
 };
 
 // This is the metadata object that describes the target object properties (optional)
-var theMeta = {
+var formDesignMeta = {
     // Since string is the default no nees to specify type
     font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
     // The "options" would be passed to jQueryUI as its options
@@ -45,45 +45,45 @@ var theMeta = {
     modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
     framework: {name: 'Framework', group: 'Plugins', type: 'options', options: ['None', {text:'AngularJS', value: 'angular'}, {text:'Backbone.js', value: 'backbone'}], description: 'Whether to include any additional framework'},
     iAmReadOnly: { name: 'I am read only', type: 'label', description: 'Label types use a label tag for read-only properties', showHelp: false }
-
 };
 
 // This is the customTypes object that describes additionnal types, and their renderers (optional)
 var theCustomTypes = {
-    ref: { // name of custom type
+    icon: {
         html: function(elemId, name, value, meta) { // custom renderer for type (required)
-            var onclick = '';
-            valueHTML = value + ' <i class="fa fa-external-link" onclick="selectRef(\'' + value + '\')"></i>';
-            return valueHTML;
+            return '<i class="fa fa-' + value + '"></i>';
         },
-        valueFn: false // value-return function (optional). If unset, default will be "function() { return $('#' + elemId).val(); }", set to false to disable it
-        // You can also put a makeValueFn function (taking elemId, name, value, meta parameters) to create value-return function on the fly (it will override valuefn setting), returning non-function will disable getting value for this property
+        valueFunction: function(elemId, name, value, meta) {  // custom getter for current value (required)
+            return function () {
+                return value;
+            }
+        },
+        postCreateInitFunction: function(elemId, name, value, meta) {  // custom post-DOM init function (optional)
+            return function () {
+                console.log('no postCreateInitFunction for icon type');
+            }
+        }
     }
 };
 
 // Options object
 var options = {
-	meta: theMeta,
+	meta: formDesignMeta,
 	customTypes: theCustomTypes
 };
 
 // Create the grid
-$('#propGrid').jqPropertyGrid(theObj, options);
+$('#propGrid').jqPropertyGrid(dataObject, options);
 
 // In order to get back the modified values:
 var theNewObj = $('#propGrid').jqPropertyGrid('get');
 ```
-The result would be:
-
-![jqPropertyGrid](https://github.com/ValYouW/jqPropertyGrid/raw/master/example/example.png)
 
 ### The metadata object
 As seen from the example above the metadata object **can** be used (it's optional) in order to describe the object properties.
 
 Each property in the metadata object could have the following:
-* browsable - Whether this property should be included in the grid, default is true (can be omitted).
 * group - The group this property belongs to
-* colspan2 - Boolean. If true then property input will span both columns and will have no name/label (useful for textarea custom type)
 * name - The display name of the property in the grid
 * type - The type of the property, supported are:
     * boolean - A checkbox would be used
@@ -91,26 +91,35 @@ Each property in the metadata object could have the following:
     * color - If the Spectrum Color Picker is loaded then it would be used, otherwise textbox
     * options - A dropdown list would be used in case the metadata contains the `options` array property
     * label - A label will be used, useful for uneditable / read-only properties
+* browsable - Whether this property should be included in the grid, default is true (can be omitted).
+* colspan2 - Boolean. If true then property input will span both columns and will have no name/label (useful for textarea custom type)
 * options - An extra options object per type:
     * If the type is `number` then the options would be passed as the jQueryUI Spinner options
     * If the type is `color` then the options would be passed as the Spectrum options
     * If the type is `options` then options should be an array with the drop-down values, if an element in the array is  `string` it will be used both as the value and text of the `option` element. If an element in the array is `object` then it should contains a `text` and `value` properties which would be used on the `option` element
 * description - A description of the property, will be used as tooltip on an hint element (a span with text "[?]")
-* showHelp - If set to false, will disable showing description's span with text "[?]" on property name. Will instead show tooltip on hover of property value (adds title attribute to property value). Can be omitted if default description effect is desired
+* showHelp - If set to false will display description as a tooltip over value, instead of on the "[?]" part of label
+
 ### Live example
 See : https://gswilcox01.github.io/jqPropertyGrid/
 
 ## Local Setup
-To install dev dependencies & run locally
+To install dev dependencies & run locally in webpack-dev-server with hot-reload
 ```
-npm install
+yarn install
 npm start
 ```
-Then open browser to http://localhost:8080/
+
+## Building a distribution
+Build output is in the /dist/ folder and should be checked in with the project
+```
+npm run build
+npm version minor
+```
 
 ## Contributing
 You are welcome to send pull requests that will make this module better. Before you send your PR please make sure that:
 
-1. There are no `jshint` nor `jscs` errors (you can use the `grunt jshint` and `grunt jscs` for that)
+1. There are no `eslint` errors
 2. If you are adding a new feature make sure to update the `README` accordingly
 3. Thx !
