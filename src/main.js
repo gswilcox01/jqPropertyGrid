@@ -89,19 +89,14 @@ $.fn.jqPropertyGrid = function(obj, options) {
 	}
 
 	// Create a function that will return the values back from the property grid
-	var getValues = function() {
+	this.data(GET_VALS_FUNC_KEY, function() {
 		var result = {};
 		for (var prop in getValueFuncs) {
-			if (typeof getValueFuncs[prop] !== 'function') {
-				continue;
-			}
+			if (typeof getValueFuncs[prop] !== 'function') continue;
 			result[prop] = getValueFuncs[prop]();
 		}
-
 		return result;
-	};
-
-	this.data(GET_VALS_FUNC_KEY, getValues);
+	});
 };
 
 /**
