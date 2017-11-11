@@ -10,7 +10,6 @@ var pgIdSequence = 0;
  * @param {JQPropertyGridOptions} options - Options object for the component
  */
 
-console.log('here!')
 $.fn.jqPropertyGrid = function(obj, options) {
 	// Check if the user called the 'get' function (to get the values back from the grid).
 	if (typeof obj === 'string' && obj === 'get') {
@@ -31,10 +30,17 @@ $.fn.jqPropertyGrid = function(obj, options) {
 	options.customTypes = options.customTypes || {};
 	var meta = options.meta;
 
-	// Add our first external "type"
+	// LOAD ALL files in the "types" folder as a custom type named the same as the base filename
 	// TODO: move all types to external types
-	// TODO: use webpack function read all files in "types" directory, and auto-add by filename
-	options.customTypes['textarea'] = require('./types/textarea.js')
+	var allTypes = require.context("./types", true, /\.js$/)
+	for (var typeFilename of allTypes.keys()) {
+		var regex = new RegExp("^\.\/(.*?)\.js$");
+		var match = regex.exec(typeFilename);
+		if (match !== null) {
+			var typeName = match[1];
+			options.customTypes[typeName] = allTypes(typeFilename)
+		}
+	}
 
 	// Seems like we are ok to create the grid
 	var propertyRowsHTML = {OTHER_GROUP_NAME: ''};
