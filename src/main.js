@@ -43,8 +43,7 @@ $.fn.jqPropertyGrid = function(obj, options) {
 	}
 
 	// Seems like we are ok to create the grid
-	var propertyRowsHTML = {OTHER_GROUP_NAME: ''};
-	var groupsHeaderRowHTML = {};
+	var groupHTML = {};
 	var postCreateInitFuncs = [];
 	var getValueFuncs = {};
 	var pgId = 'pg' + (pgIdSequence++);
@@ -58,29 +57,24 @@ $.fn.jqPropertyGrid = function(obj, options) {
 
 		// If this is the first time we run into this group create the group row
 		var currGroup = (meta[prop] && meta[prop].group) || OTHER_GROUP_NAME;
-		if (groupsHeaderRowHTML[currGroup] === undefined) {
-			groupsHeaderRowHTML[currGroup] = getGroupHeaderRowHtml(currGroup);
-			propertyRowsHTML[currGroup] = '';
+		if (groupHTML[currGroup] === undefined) {
+			groupHTML[currGroup] = getGroupHeaderRowHtml(currGroup);
 		}
 
 		// Append the current cell html into the group html
-		propertyRowsHTML[currGroup] += getPropertyRowHtml(pgId, prop, obj[prop], meta[prop], postCreateInitFuncs, getValueFuncs, options);
+		groupHTML[currGroup] += getPropertyRowHtml(pgId, prop, obj[prop], meta[prop], postCreateInitFuncs, getValueFuncs, options);
 	}
 
 	// Now we have all the html we need, just assemble it
 	var innerHTML = '<table class="pgTable">';
-	for (var group in groupsHeaderRowHTML) {
-		// Skip the "Other" group, it always comes last
+	for (var group in groupHTML) {
 		if (group == OTHER_GROUP_NAME) continue;
-
-		innerHTML += groupsHeaderRowHTML[group];
-		innerHTML += propertyRowsHTML[group];
+		innerHTML += groupHTML[group];
 	}
 
 	// Finally add the "Other" group to the end
-	if (propertyRowsHTML[OTHER_GROUP_NAME]) {
-		innerHTML += groupsHeaderRowHTML[OTHER_GROUP_NAME];
-		innerHTML += propertyRowsHTML[OTHER_GROUP_NAME];
+	if (groupHTML[OTHER_GROUP_NAME]) {
+		innerHTML += groupHTML[OTHER_GROUP_NAME];
 	}
 
 	// Close the table and apply it to the div
