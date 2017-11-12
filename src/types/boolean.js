@@ -1,6 +1,9 @@
 module.exports = {
   html (elemId, name, value, meta) {
-    return '<input type="checkbox" id="' + elemId + '" value="' + name + '"' + (value ? ' checked' : '') + ' />';
+    var html = '<input type="checkbox" id="' + elemId + '" value="' + name + '"';
+    html += (value) ? ' checked' : '';
+    html += ' />';
+    return html;
   },
 
   valueFunction (elemId, name, value, meta) {
@@ -8,4 +11,4 @@ module.exports = {
       return $('#' + elemId).prop('checked');
     }
   }
-};
+}
