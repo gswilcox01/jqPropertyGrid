@@ -28,17 +28,17 @@ $.fn.jqPropertyGrid = function(obj, options) {
 
 	// Normalize options
 	options.customTypes = options.customTypes || {};
+	options.types = {};
 	var meta = options.meta;
 
 	// LOAD ALL files in the "types" folder as a custom type named the same as the base filename
-	// TODO: move all types to external types
 	var allTypes = require.context("./types", true, /\.js$/)
 	for (var typeFilename of allTypes.keys()) {
 		var regex = new RegExp("^\.\/(.*?)\.js$");
 		var match = regex.exec(typeFilename);
 		if (match !== null) {
 			var typeName = match[1];
-			options.customTypes[typeName] = allTypes(typeFilename)
+			options.types[typeName] = allTypes(typeFilename)
 		}
 	}
 
@@ -124,68 +124,28 @@ function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getVal
 	var elemId = pgId + name;
 	var valueHTML;
 
-	// check if type is registered in customTypes
-	var customType = options.customTypes[type]
-	if (customType) {
-		valueHTML = customType.html(elemId, name, value, meta);
-		getValueFuncs[name] = customType.valueFunction(elemId, name, value, meta);
-		if (customType.hasOwnProperty('postCreateInitFunction')) {
-			postCreateInitFuncs.push(customType.postCreateInitFunction(elemId, name, value, meta));
+	// if type not passed, infer type based on value...
+	if (type === '') {
+		if (typeof value === 'boolean') {
+			type = 'boolean';
+		} else if (typeof value === 'number') {
+			type = 'number';
 		}
 	}
 
-	// If boolean create checkbox
-	else if (type === 'boolean' || (type === '' && typeof value === 'boolean')) {
-		valueHTML = '<input type="checkbox" id="' + elemId + '" value="' + name + '"' + (value ? ' checked' : '') + ' />';
-		getValueFuncs[name] = function() {
-			return $('#' + elemId).prop('checked');
-		};
+	// if jquery UI components aren't loaded fall back to plain inputs
+	if (type === 'number' && typeof $.fn.spinner !== 'function') {
+		type = 'input';
+	} else if (type === 'color' && typeof $.fn.spectrum !== 'function') {
+		type = 'input';
 	}
 
-	// If options create drop-down list
-	else if (type === 'options' && Array.isArray(meta.options)) {
-		valueHTML = getSelectOptionHtml(elemId, value, meta.options);
-		getValueFuncs[name] = function() {
-			return $('#' + elemId).val();
-		};
-	}
-
-	// If number and a jqueryUI spinner is loaded use it
-	else if (typeof $.fn.spinner === 'function' && (type === 'number' || (type === '' && typeof value === 'number'))) {
-		valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" style="width:50px" />';
-		postCreateInitFuncs.push(initSpinner(elemId, meta.options));
-		getValueFuncs[name] = function() {
-			return $('#' + elemId).spinner('value');
-		};
-	}
-
-	// If color and we have the spectrum color picker use it
-	else if (type === 'color' && typeof $.fn.spectrum === 'function') {
-		valueHTML = '<input type="text" id="' + elemId + '" />';
-		postCreateInitFuncs.push(initColorPicker(elemId, value, meta.options));
-		getValueFuncs[name] = function() {
-			return $('#' + elemId).spectrum('get').toHexString();
-		};
-	}
-
-	// If label (for read-only)
-	else if (type === 'label') {
-		if (typeof meta.description === 'string' && meta.description) {
-			valueHTML = '<label for="' + elemId + '" title="' + meta.description + '">' + value + '</label>';
-		} else {
-			valueHTML = '<label for="' + elemId + '">' + value + '</label>';
-		}
-		getValueFuncs[name] = function() {
-			return value;
-		};
-	}
-
-	// Default is textbox
-	else {
-		valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '"</input>';
-		getValueFuncs[name] = function() {
-			return $('#' + elemId).val();
-		};
+	// check if type is registered in customTypes, or standard types, otherwise default to INPUT
+	var thisType = options.customTypes[type] || options.types[type] || options.types['input'];
+	valueHTML = thisType.html(elemId, name, value, meta);
+	getValueFuncs[name] = thisType.valueFunction(elemId, name, value, meta);
+	if (thisType.hasOwnProperty('postCreateInitFunction')) {
+		postCreateInitFuncs.push(thisType.postCreateInitFunction(elemId, name, value, meta));
 	}
 
 	// Now create the label HTML for column 1
@@ -206,88 +166,3 @@ function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getVal
 	}
 }
 
-/**
- * Gets a select-option (dropdown) html
- * @param {string} id - The select element id
- * @param {string} [selectedValue] - The current selected value
- * @param {*[]} options - An array of option. An element can be an object with value/text pairs, or just a string which is both the value and text
- * @returns {string} The select element html
- */
-function getSelectOptionHtml(id, selectedValue, options) {
-	selectedValue = selectedValue || '';
-	options = options || [];
-
-	var html = '<select id="' + id + '">';
-	for (var i = 0; i < options.length; i++) {
-		var value = typeof options[i] === 'object' ? options[i].value : options[i];
-		var text = typeof options[i] === 'object' ? options[i].text : options[i];
-
-		html += '<option value="' + value + '"';
-		html += (selectedValue === value) ? ' selected>' : '>';
-		html += text + '</option>';
-	}
-	html += '</select>';
-	return html;
-}
-
-/**
- * Gets an init function to a number textbox
- * @param {string} id - The number textbox id
- * @param {object} [options] - The spinner options
- * @returns {function}
- */
-function initSpinner(id, options) {
-	// Copy the options so we won't change the user "copy"
-	var opts = $.extend({}, options);
-
-	// Add a handler to the change event to verify the min/max (only if not provided by the user)
-	opts.change = typeof opts.change === 'undefined' ? onSpinnerChange : opts.change;
-
-	return function onSpinnerInit() {
-		$('#' + id).spinner(opts);
-	};
-}
-
-/**
- * Gets an init function to a color textbox
- * @param {string} id - The color textbox id
- * @param {string} [color] - The current color (e.g #000000)
- * @param {object} [options] - The color picker options
- * @returns {function}
- */
-function initColorPicker(id, color, options) {
-	var opts = $.extend({}, options);
-	if (typeof color === 'string') {
-		opts.color = color;
-	}
-
-	return function onColorPickerInit() {
-		$('#' + id).spectrum(opts);
-	};
-}
-
-/**
- * Handler for the spinner change event
- */
-function onSpinnerChange() {
-	var $spinner = $(this);
-	var value = $spinner.spinner('value');
-
-	// If the value is null and the real value in the textbox is string we empty the textbox
-	if (value === null && typeof $spinner.val() === 'string') {
-		$spinner.val('');
-		return;
-	}
-
-	// Now check that the number is in the min/max range.
-	var min = $spinner.spinner('option', 'min');
-	var max = $spinner.spinner('option', 'max');
-	if (typeof min === 'number' && this.value < min) {
-		this.value = min;
-		return;
-	}
-
-	if (typeof max === 'number' && this.value > max) {
-		this.value = max;
-	}
-}
