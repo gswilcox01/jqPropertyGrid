@@ -16,7 +16,6 @@ $.fn.jqPropertyGrid = function(obj, options) {
 		if (typeof this.data(GET_VALS_FUNC_KEY) === 'function') {
 			return this.data(GET_VALS_FUNC_KEY)();
 		}
-
 		return null;
 	} else if (typeof obj !== 'object' || obj === null) {
 		console.error('jqPropertyGrid 1st parameter must be a JS data object to initialize the grid.');
@@ -27,20 +26,9 @@ $.fn.jqPropertyGrid = function(obj, options) {
 	}
 
 	// Normalize options
+	loadStandardTypes(options);
 	options.customTypes = options.customTypes || {};
-	options.types = {};
 	var meta = options.meta;
-
-	// LOAD ALL files in the "types" folder as a custom type named the same as the base filename
-	var allTypes = require.context("./types", true, /\.js$/)
-	for (var typeFilename of allTypes.keys()) {
-		var regex = new RegExp("^\.\/(.*?)\.js$");
-		var match = regex.exec(typeFilename);
-		if (match !== null) {
-			var typeName = match[1];
-			options.types[typeName] = allTypes(typeFilename)
-		}
-	}
 
 	// Seems like we are ok to create the grid
 	var groupHTML = {};
@@ -100,6 +88,23 @@ $.fn.jqPropertyGrid = function(obj, options) {
 };
 
 /**
+ * Uses webpack to load all the standard types from the types folder into the global options.types object
+ * @param {object} options - The global options object
+ */
+function loadStandardTypes(options) {
+	options.types = {};
+	var allTypes = require.context("./types", true, /\.js$/)
+	for (var typeFilename of allTypes.keys()) {
+		var regex = new RegExp("^\.\/(.*?)\.js$");
+		var match = regex.exec(typeFilename);
+		if (match !== null) {
+			var typeName = match[1];
+			options.types[typeName] = allTypes(typeFilename)
+		}
+	}
+}
+
+/**
  * Gets the html of a group header row
  * @param {string} displayName - The group display name
  */
@@ -119,10 +124,8 @@ function getGroupHeaderRowHtml(displayName) {
  */
 function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getValueFuncs, options) {
 	meta = meta || {};
-	var displayName = meta.name || name;
 	var type = meta.type || '';
 	var elemId = pgId + name;
-	var valueHTML;
 
 	// if type not passed, infer type based on value...
 	if (type === '') {
@@ -140,29 +143,32 @@ function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getVal
 		type = 'input';
 	}
 
-	// check if type is registered in customTypes, or standard types, otherwise default to INPUT
+	// Lookup the type or default to 'input'
+	// Create the input HTML
 	var thisType = options.customTypes[type] || options.types[type] || options.types['input'];
-	valueHTML = thisType.html(elemId, name, value, meta);
-	getValueFuncs[name] = thisType.valueFunction(elemId, name, value, meta);
+	var inputHTML = thisType.html(elemId, name, value, meta);
+
+	// Create the label HTML
+	var labelHTML = meta.name || name;
+	var helpIcon = (options.useFontAwesome) ? '<i class="fa fa-question-circle-o"></i>' : '[?]';
+	if (typeof meta.description === 'string' && meta.description &&
+		(typeof meta.showHelp === 'undefined' || meta.showHelp === true)) {
+			labelHTML +='<span class="pgTooltip" title="' + meta.description + '">' + helpIcon + '</span>';
+	}
+
+	// Create post-DOM init functions & getValue functions
 	if (thisType.hasOwnProperty('postCreateInitFunction')) {
 		postCreateInitFuncs.push(thisType.postCreateInitFunction(elemId, name, value, meta));
 	}
-
-	// Now create the label HTML for column 1
-	var helpIcon = '[?]';
-	if (options.useFontAwesome) {
-		helpIcon = '<i class="fa fa-question-circle-o"></i>';
-	}
-	if (typeof meta.description === 'string' && meta.description &&
-		(typeof meta.showHelp === 'undefined' || meta.showHelp)) {
-		displayName += '<span class="pgTooltip" title="' + meta.description + '">' + helpIcon + '</span>';
+	if (thisType.hasOwnProperty('valueFunction')) {
+		getValueFuncs[name] = thisType.valueFunction(elemId, name, value, meta);
 	}
 
-	// Now create the TR which has 1 column for the label and 1 column for the INPUT
-	if (meta.colspan2) {
-		return '<tr class="pgRow"><td colspan="2" class="pgCell">' + valueHTML + '</td></tr>';
+	// Finally assemble the HTML into 1 or 2 columns in a TR
+	if (meta.colspan2 === true) {
+		return '<tr class="pgRow"><td colspan="2" class="pgCell">' + inputHTML + '</td></tr>';
 	} else {
-		return '<tr class="pgRow"><td class="pgCell">' + displayName + '</td><td class="pgCell">' + valueHTML + '</td></tr>';
+		return '<tr class="pgRow"><td class="pgCell">' + labelHTML + '</td><td class="pgCell">' + inputHTML + '</td></tr>';
 	}
 }
 

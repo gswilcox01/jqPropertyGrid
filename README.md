@@ -114,7 +114,7 @@ npm start
 Build output is in the /dist/ folder and should be checked in with the project
 ```
 npm run build
-git add, push, etc., ALL CHANGES
+__then__ git add, push, etc., ALL CHANGES
 npm version minor
 ```
 
