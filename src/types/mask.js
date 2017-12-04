@@ -12,6 +12,11 @@ module.exports = {
   postCreateInitFunction (elemId, name, value, meta) {
     if (typeof $.fn.mask === 'function') {
       var opts = $.extend({}, meta.options);
+
+      // if not defined, default to autoclear
+      if (typeof opts.autoclear === 'undefined') {
+        opts.autoclear = false;
+      }
       return function () {
         $('#' + elemId).mask(opts.mask, opts);
       };
