@@ -1,3 +1,4 @@
+// requires - https://github.com/digitalBush/jquery.maskedinput
 module.exports = {
   html (elemId, name, value, meta) {
     return '<input type="text" id="' + elemId + '" value="' + value + '" />';
