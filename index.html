@@ -36,7 +36,11 @@
 				someOption: 'Maybe',
 				noGroup: 'I have no group',
 				dontShowMe: 'please',
-				readOnly: 'I am read only'
+				readOnly: 'I am read only',
+				icon: 'home',
+				choices: ["Choice 1", "Choice 2", "A really long choice which should trigger the horizontal scrollbar!"],
+				plaintext: "plain text for a text area (i.e. not an array)",
+				iHaveNoMeta: 'Never mind...',
 			};
 
 			// This is our meta object / form design
@@ -49,17 +53,44 @@
 				buyColor: {group: 'Appearance', name: 'Buy color', type: 'color', options: colorOptions},
 				sellColor: {group: 'Appearance', name: 'Sell color', type: 'color', options: colorOptions},
 				someOption: {name: 'Some option', type: 'options', options: ['Yes', 'No', {text:'Not sure', value: 'Maybe'}]},
-				readOnly: {name: 'Read Only', type: 'label', description: 'This is a label', showHelp: false}
+				readOnly: {name: 'Read Only', type: 'label', description: 'This is a label', showHelp: false},
+				icon: {name: 'Icon', type: 'icon'},
+				choices: {name: 'n/a', group: 'Choices (1 per line):', type: 'textarea', colspan2: true},
+				plaintext: {group: 'Plaintext Textarea:', type: 'textarea', colspan2: true},
 			};
+
+      // define some extra custom types to use with jqPropertyGrid
+			var theCustomTypes = {
+				icon: {
+					html: function(elemId, name, value, meta) { // custom renderer for type (required)
+						return '<i class="fa fa-' + value + '"></i>';
+					},
+					valueFunction: function(elemId, name, value, meta) {  // custom getter for current value (required)
+						return function () {
+							return value;
+						}
+					},
+					postCreateInitFunction: function(elemId, name, value, meta) {  // custom post-DOM init function (optional)
+						return function () {
+							console.log('no postCreateInitFunction for icon type');
+						}
+					}
+				}
+			};
+
 
 			// Lets create the grid for it
       function initPropertyGrid(data) {
         $('#propGrid').jqPropertyGrid(data, {
-          meta: formDesignSettings
+          useFontAwesome: true, 
+          meta: formDesignSettings, 
+          customTypes: theCustomTypes
         });
       }
+
+			// data
       function getFormValues() {
-				var first = JSON.stringify($('#propGrid').jqPropertyGrid('get'), null, '\t');
+				var first = JSON.stringify($('#propGrid').jqPropertyGrid('get'), null, '  ');
 				$('#txtValues').val(first);
       }
       function setFormValues() {
@@ -67,10 +98,25 @@
         initPropertyGrid(newData);
       }
 
+			// design
+      function getFormDesign() {
+				var currentDesign = JSON.stringify(formDesignSettings, null, '  ');
+				$('#txtDesign').val(currentDesign);
+      }
+      function setFormDesign() {
+				var currentData = $('#propGrid').jqPropertyGrid('get');
+				var newDesign = JSON.parse($('#txtDesign').val())
+				formDesignSettings = newDesign;
+        initPropertyGrid(currentData);
+      }
+
       initPropertyGrid(dataStructure);
       getFormValues();
+      getFormDesign();
 			$('#btnGetValues').click(getFormValues);
 			$('#btnSetValues').click(setFormValues);
+			$('#btnGetDesign').click(getFormDesign);
+			$('#btnSetDesign').click(setFormDesign);
 		});
 	</script>
 </head>
@@ -87,14 +133,22 @@
 					<li><a href="index2.html">Example 2</a></li>
 				</ul>
 			</div>
-		</div><!-- /.container-fluid -->
+		</div>
 	</nav>
 
+  <!-- page content -->
 	<div id="propGrid" class="propertyGrid" style="float:left; margin-left: 20px;"></div>
 	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
+		<h2>Form Data:</h2>
 		<textarea id="txtValues" rows="20" cols="50"></textarea><br>
-		<input id="btnSetValues" type="button" value="<--- Set Form Values"/>
-		<input id="btnGetValues" type="button" value="Get Form Values --->"/>
+		<input id="btnSetValues" type="button" value="<--- Set Form Data"/>
+		<input id="btnGetValues" type="button" value="Get Form Data --->"/>
+	</div>
+	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
+			<h2>Form Design:</h2>
+			<textarea id="txtDesign" rows="20" cols="50"></textarea><br>
+		<input id="btnSetDesign" type="button" value="<--- Set Form Design"/>
+		<input id="btnGetDesign" type="button" value="Get Form Design --->"/>
 	</div>
 </body>
 </html>

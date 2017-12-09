@@ -34,10 +34,6 @@
 				font: 'Consolas',
 				fontSize: 14,
 				fontColor: '#a3ac03',
-				iHaveNoMeta: 'Never mind...',
-				icon: 'home',
-				choices: ["Choice 1", "Choice 2", "A really long choice which should trigger the horizontal scrollbar!"],
-				plaintext: "plain text for a text area (i.e. not an array)",
 				maskedNumber: 22,
 				maskedDate: '',
 				maskedDate2: '',
@@ -51,12 +47,6 @@
 				font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
 				fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},
 				fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
-				jQuery: { group: 'Plugins', description: 'Whether or not to include jQuery on the page', showHelp: false },
-				modernizr: {group: 'Plugins', type: 'boolean', description: 'Whether or not to include modernizr on the page'},
-				framework: {name: 'Framework', group: 'Plugins', type: 'options', options: ['None', {text:'AngularJS', value: 'angular'}, {text:'Backbone.js', value: 'backbone'}], description: 'Whether to include any additional framework'},
-				icon: {name: 'Icon', type: 'icon'},
-				choices: {name: 'n/a', group: 'Choices (1 per line):', type: 'textarea', colspan2: true},
-				plaintext: {group: 'Plaintext Textarea:', type: 'textarea', colspan2: true},
 
 				// see more options @ https://github.com/digitalBush/jquery.maskedinput
 				maskedNumber: {name: 'Number', group: 'Masks', type: 'mask', options: {mask: '999'}},
@@ -69,35 +59,17 @@
 				autoDollar: {name: 'Dollar', group: 'AutoNumeric', type: 'autonumeric', options: { currencySymbol : '$' }}
 			};
 
-      // define some extra custom types to use with jqPropertyGrid
-			var theCustomTypes = {
-				icon: {
-					html: function(elemId, name, value, meta) { // custom renderer for type (required)
-						return '<i class="fa fa-' + value + '"></i>';
-					},
-					valueFunction: function(elemId, name, value, meta) {  // custom getter for current value (required)
-						return function () {
-							return value;
-						}
-					},
-					postCreateInitFunction: function(elemId, name, value, meta) {  // custom post-DOM init function (optional)
-						return function () {
-							console.log('no postCreateInitFunction for icon type');
-						}
-					}
-				}
-			};
-
 			// Lets create the grid for it
       function initPropertyGrid(data) {
         $('#propGrid').jqPropertyGrid(data, {
           useFontAwesome: true, 
-          meta: formDesignSettings, 
-          customTypes: theCustomTypes
+          meta: formDesignSettings
         });
       }
+
+			// data
       function getFormValues() {
-				var first = JSON.stringify($('#propGrid').jqPropertyGrid('get'), null, '\t');
+				var first = JSON.stringify($('#propGrid').jqPropertyGrid('get'), null, '  ');
 				$('#txtValues').val(first);
       }
       function setFormValues() {
@@ -105,10 +77,25 @@
         initPropertyGrid(newData);
       }
 
+			// design
+      function getFormDesign() {
+				var currentDesign = JSON.stringify(formDesignSettings, null, '  ');
+				$('#txtDesign').val(currentDesign);
+      }
+      function setFormDesign() {
+				var currentData = $('#propGrid').jqPropertyGrid('get');
+				var newDesign = JSON.parse($('#txtDesign').val())
+				formDesignSettings = newDesign;
+        initPropertyGrid(currentData);
+      }
+
       initPropertyGrid(dataStructure);
       getFormValues();
+      getFormDesign();
 			$('#btnGetValues').click(getFormValues);
 			$('#btnSetValues').click(setFormValues);
+			$('#btnGetDesign').click(getFormDesign);
+			$('#btnSetDesign').click(setFormDesign);
 		});
 	</script>
 </head>
@@ -125,15 +112,22 @@
 					<li class="active"><a href="index2.html">Example 2</a></li>
 				</ul>
 			</div>
-		</div><!-- /.container-fluid -->
+		</div>
 	</nav>
 
-  <!-- example -->
+  <!-- page content -->
 	<div id="propGrid" class="propertyGrid" style="float:left; margin-left: 20px;"></div>
 	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
+		<h2>Form Data:</h2>
 		<textarea id="txtValues" rows="20" cols="50"></textarea><br>
-		<input id="btnSetValues" type="button" value="<--- Set Form Values"/>
-		<input id="btnGetValues" type="button" value="Get Form Values --->"/>
+		<input id="btnSetValues" type="button" value="<--- Set Form Data"/>
+		<input id="btnGetValues" type="button" value="Get Form Data --->"/>
+	</div>
+	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
+			<h2>Form Design:</h2>
+			<textarea id="txtDesign" rows="20" cols="50"></textarea><br>
+		<input id="btnSetDesign" type="button" value="<--- Set Form Design"/>
+		<input id="btnGetDesign" type="button" value="Get Form Design --->"/>
 	</div>
 </body>
 </html>
