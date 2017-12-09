@@ -33,7 +33,6 @@
 			// This is our data structure
 			var dataStructure = {
 				font: 'Consolas',
-				fontSize: 14,
 				maskedNumber: 22,
 				maskedDate: '',
 				maskedDate2: '',
@@ -49,7 +48,7 @@
 
 			// This is our meta object / form design
 			// see more validation options @ http://www.formvalidator.net/#default-validators
-			var requiredAlphanumeric = { rules: 'required alphanumeric', error_msg: 'Required Alphanumeric!'};
+			var requiredAlphanumeric = { rules: 'required alphanumeric', error_msg: 'Required Alphanumeric and extra long to see display in iframe!'};
 			var requiredNumeric = { rules: 'required number', error_msg: 'Required Number!'};
 			var requiredDollar = { rules: 'required number', allowing: 'float', ignore: '$,', error_msg: 'Required Dollar Amt!'};
 			var requiredDollarNoIgnore = { rules: 'required number', allowing: 'float', error_msg: 'Required Dollar Amt!'};
@@ -128,35 +127,6 @@
 	</script>
 </head>
 <body>
-	<!-- navbar -->
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="index.html">jqPropertyGrid</a>
-			</div>
-			<div>
-				<ul class="nav navbar-nav">
-					<li ><a href="index.html">Example 1</a></li>
-					<li class="active"><a href="index2.html">Example 2</a></li>
-					<li><a href="index3.html">Example 3</a></li>
-				<ul>
-			</div>
-		</div>
-	</nav>
-
-  <!-- page content -->
-	<form id="propGrid" class="pgContainer" style="float:left; margin-left: 20px;"></form>
-	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
-		<h2>Form Data:</h2>
-		<textarea id="txtValues" rows="20" cols="50"></textarea><br>
-		<input id="btnSetValues" type="button" value="<--- Set Form Data"/>
-		<input id="btnGetValues" type="button" value="Get Form Data --->"/>
-	</div>
-	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
-			<h2>Form Design:</h2>
-			<textarea id="txtDesign" rows="20" cols="50"></textarea><br>
-		<input id="btnSetDesign" type="button" value="<--- Set Form Design"/>
-		<input id="btnGetDesign" type="button" value="Get Form Design --->"/>
-	</div>
+    <form id="propGrid" class="pgContainer" style="width: 100%;"></form>
 </body>
 </html>
