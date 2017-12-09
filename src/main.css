@@ -29,3 +29,14 @@
 .pgTooltip {
     margin-left: 5px;
 }
+
+.pgContainer {
+    font-family: 'verdana';
+    font-size: 12px;
+}
+.form-control {
+    height: 26px;
+    padding: 2px 2px;
+    font-size: 12px;
+    border-radius: 0px;
+}

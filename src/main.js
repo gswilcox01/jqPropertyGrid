@@ -122,8 +122,8 @@ function getGroupHeaderRowHtml(displayName) {
  * @param {object.<string, function>} [getValueFuncs] - A dictionary where the key is the property name and the value is a function to retrieve the property selected value
  * @param {object} options - The global options object
  */
-function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getValueFuncs, options) {
-	meta = meta || {};
+function getPropertyRowHtml(pgId, name, value, originalMeta, postCreateInitFuncs, getValueFuncs, options) {
+	var meta = $.extend(true, {}, originalMeta);
 	var type = meta.type || '';
 	var elemId = pgId + name;
 
@@ -141,6 +141,24 @@ function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getVal
 		type = 'input';
 	} else if (type === 'color' && typeof $.fn.spectrum !== 'function') {
 		type = 'input';
+	}
+
+	// Create "jquery form validator" html to be used later when generating INPUT HTML
+	if (meta.validation) {
+		meta.validationHTML = 'data-validation="' + meta.validation.rules + '"';
+		$.each(meta.validation, function(key, value) {
+			if (key === 'rules') {
+				return true;
+			} else if (key.startsWith('sanitize')) {
+				var htmlAttribute = key.replace(/_/g, "-");
+				meta.validationHTML += ' data-' + htmlAttribute + '="' + value + '"';
+			} else {
+				var htmlAttribute = key.replace(/_/g, "-");
+				meta.validationHTML += ' data-validation-' + htmlAttribute + '="' + value + '"';
+			}
+		});
+	} else {
+		meta.validationHTML = '';
 	}
 
 	// Lookup the type or default to 'input'

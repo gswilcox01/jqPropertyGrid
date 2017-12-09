@@ -4,26 +4,27 @@
 	<meta charset="UTF-8">
 	<title>jqPropertyGrid Example</title>
 
-	<style>
-		div.propertyGrid {
-			font-family: 'verdana';
-			font-size: 12px;
-		}
-	</style>
-  <!-- https://getbootstrap.com/docs/3.3/getting-started/ -->
+	<!-- https://getbootstrap.com/docs/3.3/getting-started/ -->
+	<!-- vendor css -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-	<link rel='stylesheet' href='./dist/jqPropertyGrid.css' />
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-form-validator/2.3.26/theme-default.min.css" type="text/css" />
+	<!-- lib css -->
+	<link rel='stylesheet' href='./dist/jqPropertyGrid.css' />
+	<style>
+		</style>
+		
+	<!-- vendor js -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
 	<script src="https://unpkg.com/autonumeric@4.0.1/dist/autoNumeric.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-form-validator/2.3.26/jquery.form-validator.min.js"></script>
+	<!-- lib js -->
 	<script src="./dist/jqPropertyGrid.js"></script>
 
 
@@ -33,30 +34,50 @@
 			var dataStructure = {
 				font: 'Consolas',
 				fontSize: 14,
-				fontColor: '#a3ac03',
 				maskedNumber: 22,
 				maskedDate: '',
 				maskedDate2: '',
 				maskedDollar: '1.22',
 				autoNumber: 22,
-				autoDollar: '1.22'
+				autoDollar: '1.22',
+				vNumber: 22,
+				vDollar: '1.22',
+				vDate: '',
+				v17Alpha: '',
+				vRouting: ''
 			};
 
 			// This is our meta object / form design
+			// see more validation options @ http://www.formvalidator.net/#default-validators
+			var requiredAlphanumeric = { rules: 'required alphanumeric', error_msg: 'Required Alphanumeric!'};
+			var requiredNumeric = { rules: 'required number', error_msg: 'Required Number!'};
+			var requiredDollar = { rules: 'required number', allowing: 'float', ignore: '$,', error_msg: 'Required Dollar Amt!'};
+			var requiredDollarNoIgnore = { rules: 'required number', allowing: 'float', error_msg: 'Required Dollar Amt!'};
+			var required = { rules: 'required', error_msg: 'Required!'};
+			var requiredDate = { rules: 'required date', error_msg: 'mm/dd/yyyy required!', format: 'mm/dd/yyyy'};
+			var validate17alpha = { rules: 'custom', error_msg: 'upto 17 upper alphanumeric', regexp: '^[a-zA-Z0-9]{0,17}$', sanitize: 'trim upper'};
+			var validateRouting = { rules: 'custom', help: 'please enter 9 digits', error_msg: 'exactly 9 digits', regexp: '^(\\d{9})?$'};
+			
 			var formDesignSettings = {
-				font: { group: 'Editor', name: 'Font', description: 'The font editor to use'},
-				fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }},
-				fontColor: { group: 'Editor', name: 'Font color', type: 'color', options: { preferredFormat: 'hex' }},
+				font: { group: 'Editor', name: 'Font', description: 'The font editor to use', validation: requiredAlphanumeric },
+				fontSize: { group: 'Editor', name: 'Font size', type: 'number', options: { min: 0, max: 20, step: 2 }, validation: requiredNumeric },
 
 				// see more options @ https://github.com/digitalBush/jquery.maskedinput
-				maskedNumber: {name: 'Number', group: 'Masks', type: 'mask', options: {mask: '999'}},
-				maskedDate: {name: 'Date', group: 'Masks', type: 'mask', options: {mask: '99/99/9999'}},
-				maskedDate2: {name: 'Date2', group: 'Masks', type: 'mask', options: {mask: '99/99/9999', placeholder:'mm/dd/yyyy'}},
-				maskedDollar: {name: 'Dollar', group: 'Masks', type: 'mask', options: {mask: '$9.99'}},
+				maskedNumber: {name: 'Number', group: 'Masks', type: 'mask', options: {mask: '999'}, validation: requiredNumeric },
+				maskedDate: {name: 'Date', group: 'Masks', type: 'mask', options: {mask: '99/99/9999'}, validation: requiredDate },
+				maskedDate2: {name: 'Date2', group: 'Masks', type: 'mask', options: {mask: '99/99/9999', placeholder:'mm/dd/yyyy'}, validation: requiredDate },
+				maskedDollar: {name: 'Dollar', group: 'Masks', type: 'mask', options: {mask: '$9.99'}, validation: requiredDollar },
 
 				// see more options @ https://github.com/autoNumeric/autoNumeric
-				autoNumber: {name: 'Number', group: 'AutoNumeric', type: 'autonumeric', options: { decimalPlaces: '0', minimumValue: 0, maximumValue: 1000 }},
-				autoDollar: {name: 'Dollar', group: 'AutoNumeric', type: 'autonumeric', options: { currencySymbol : '$' }}
+				autoNumber: {name: 'Number', group: 'AutoNumeric', type: 'autonumeric', options: { decimalPlaces: '0', minimumValue: 0, maximumValue: 1000 }, validation: requiredNumeric },
+				autoDollar: {name: 'Dollar', group: 'AutoNumeric', type: 'autonumeric', options: { currencySymbol : '$' }, validation: requiredDollar },
+
+				// plain inputs w/ just validation
+				vDate: {name: 'Date', group: 'Validation Only', type: 'input', validation: requiredDate },
+				vNumber: {name: 'Number', group: 'Validation Only', type: 'input', validation: requiredNumeric },
+				vDollar: {name: 'Dollar', group: 'Validation Only', type: 'input', validation: requiredDollarNoIgnore },
+				v17Alpha: {name: 'Regex1', group: 'Validation Only', type: 'input', validation: validate17alpha },
+				vRouting: {name: 'Regex2', group: 'Validation Only', type: 'input', validation: validateRouting }
 			};
 
 			// Lets create the grid for it
@@ -64,7 +85,14 @@
         $('#propGrid').jqPropertyGrid(data, {
           useFontAwesome: true, 
           meta: formDesignSettings
-        });
+				});
+				
+				if (typeof $.fn.validate === 'function') {
+					$.validate({
+						modules : 'sanitize',
+						form: '#propGrid'
+					});
+				}
       }
 
 			// data
@@ -116,7 +144,7 @@
 	</nav>
 
   <!-- page content -->
-	<div id="propGrid" class="propertyGrid" style="float:left; margin-left: 20px;"></div>
+	<form id="propGrid" class="pgContainer" style="float:left; margin-left: 20px;"></form>
 	<div style="border: 0px solid gold; float:left; margin-left: 20px;">
 		<h2>Form Data:</h2>
 		<textarea id="txtValues" rows="20" cols="50"></textarea><br>
