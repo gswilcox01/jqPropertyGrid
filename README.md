@@ -86,19 +86,30 @@ Each property in the metadata object could have the following:
 * group - The group this property belongs to
 * name - The display name of the property in the grid
 * type - The type of the property, supported are:
-    * boolean - A checkbox would be used
-    * number - If the jQueryUI Spinner is loaded then it would be used, otherwise textbox
-    * color - If the Spectrum Color Picker is loaded then it would be used, otherwise textbox
-    * options - A dropdown list would be used in case the metadata contains the `options` array property
-    * label - A label will be used, useful for uneditable / read-only properties
-* browsable - Whether this property should be included in the grid, default is true (can be omitted).
-* colspan2 - Boolean. If true then property input will span both columns and will have no name/label (useful for textarea custom type)
+    * boolean - A checkbox will be used
+    * number - A jqueryui spinner will be used
+    * color - A Spectrum Color Picker will be used
+    * options - A dropdown list will be used --- options 
+    * label - A read-only label will be used
+    * input - A normal text input control will be used
+    * autonumeric - An autonumeric input will be used
+    * mask - A jquery masked.input will be used
+* browsable - Whether this property should be included in the grid (default is true)
+* useFontAwesome - Whether a font awesome icon should be used instead of the text [?] for tooltips
+* colspan2 - Whether this property should span both columns and have no label (default is false)
 * options - An extra options object per type:
-    * If the type is `number` then the options would be passed as the jQueryUI Spinner options
-    * If the type is `color` then the options would be passed as the Spectrum options
-    * If the type is `options` then options should be an array with the drop-down values, if an element in the array is  `string` it will be used both as the value and text of the `option` element. If an element in the array is `object` then it should contains a `text` and `value` properties which would be used on the `option` element
-* description - A description of the property, will be used as tooltip on an hint element (a span with text "[?]")
+    * If the type is `number` : options will be passed to jqueryui spinner as it's options
+    * If the type is `color` : options will be passed to Spectrum as it's options
+    * If the type is `mask` : options will be passed to Masked.Input as it's options
+    * If the type is `autonumeric` : options will be passed to AutoNumeric as it's options
+    * If the type is `options` : options should be an array of choices to display in the dropdown/select component.  Each element of the array should be either a string, or an object like { text: 'display name', value: 'option_code' }
+* description - A description of the property, will be used as tooltip next to the property name
 * showHelp - If set to false will display description as a tooltip over value, instead of on the "[?]" part of label
+* validation - An object with jquery-form-validator values to apply to INPUT control types (input, autonumeric, mask)
+    * "rules" - will populate directly into the "data-validation" attribute on the <input>
+    * "sanitize*" - anything starting with sanitize will have "data-" prepended then added as an attribute
+    * "*" - anything else will will have "data-validation" prepended then added as an attribute
+    * "*_*" - anything with an underscore in the name will have it replaced with a "-" for the attribute name
 
 ### Live example
 See : https://gswilcox01.github.io/jqPropertyGrid/
